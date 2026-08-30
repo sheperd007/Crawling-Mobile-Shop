@@ -28,8 +28,7 @@ Crawling-Mobile-Shop/
 │   ├── modeling.py     # Fit, evaluate, OLS summary
 │   └── cli.py          # crawl / train
 ├── tests/              # 61 tests; no network, no live site
-├── notebooks/
-│   ├── Mobile Crawling .ipynb   # Original exploration notebook
+├── legacy/
 │   └── crawler_original.py      # Original script, preserved
 ├── pyproject.toml
 └── requirements.txt
@@ -78,7 +77,7 @@ print(result.coefficients.head(10))  # ranked by magnitude
 
 ## Fixes applied during the refactor
 
-The original notebook and `crawler.py` are preserved in `notebooks/`. Porting them surfaced several defects, all fixed here:
+The original `crawler.py` is preserved in `legacy/`; the exploration notebook is no longer tracked and remains in the git history. Porting them surfaced several defects, all fixed here:
 
 **Feature columns were mislabelled.** The notebook selected thirteen Persian columns in one order and then assigned English names in a *different* order:
 

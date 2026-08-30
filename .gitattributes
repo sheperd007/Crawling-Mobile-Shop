@@ -1,7 +1,5 @@
-# Keep the preserved exploration notebook out of Linguist's language stats:
-# the package source is Python, and the notebook would otherwise dominate.
-notebooks/**  linguist-documentation
-*.ipynb       linguist-documentation
+# Preserved original script: keep it out of Linguist language statistics.
+legacy/**  linguist-documentation
 
 # Pin LF for source regardless of core.autocrlf.
 *.py    text eol=lf
