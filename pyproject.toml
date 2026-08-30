@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mobile-crawler"
+version = "0.1.0"
+description = "Scrape mobile-phone specifications from an online store and model price from hardware."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Hamid Jahani", email = "hamidjahani999@gmail.com" }]
+keywords = ["web-scraping", "beautifulsoup", "linear-regression", "price-prediction", "pandas"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+
+dependencies = [
+    "requests>=2.28",
+    "beautifulsoup4>=4.11",
+    "pandas>=1.5",
+    "numpy>=1.23",
+    "scikit-learn>=1.2",
+]
+
+[project.optional-dependencies]
+# statsmodels is only needed for the inferential OLS summary.
+inference = ["statsmodels>=0.13"]
+# Charts and the automated profiling report from the notebook.
+notebook = ["seaborn>=0.12", "matplotlib>=3.6", "ydata-profiling>=4.0", "jupyter>=1.0"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[project.urls]
+Homepage = "https://github.com/sheperd007/Crawling-Mobile-Shop"
+Repository = "https://github.com/sheperd007/Crawling-Mobile-Shop"
+
+[project.scripts]
+mobile-crawler = "mobile_crawler.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

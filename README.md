@@ -2,68 +2,119 @@
 
 Scrape mobile-phone listings from an Iranian e-commerce site, engineer their technical specifications into model-ready features, and fit a linear regression to predict price from hardware.
 
-**Tech stack:** Python · requests · BeautifulSoup · pandas · NumPy · scikit-learn · statsmodels · seaborn · pandas-profiling
+**Tech stack:** Python · requests · BeautifulSoup · pandas · scikit-learn · statsmodels
 
 ---
 
 ## Overview
 
-Mobile-phone prices are largely driven by hardware specifications (chip, GPU, screen, connectivity, build, release year, etc.). This project collects those specifications directly from product pages on an online store and tests how well a simple linear model can recover price from them.
+Mobile-phone prices are largely driven by hardware specifications (chip, GPU, screen, connectivity, build, release year). This project collects those specifications directly from product pages and tests how well a linear model recovers price from them.
 
-The pipeline has two stages:
+The pipeline has three stages:
 
-1. **Crawling** — `crawler.py` walks the store's mobile-category listing, follows each product link, and parses the per-product specification table into a tidy `pandas` DataFrame.
-2. **Feature engineering & modeling** — the notebook cleans the raw specs, selects and renames a subset of features to English, one-hot encodes the categorical fields, and fits both a scikit-learn `LinearRegression` and a `statsmodels` OLS regression for interpretability.
-
-The raw crawl produces **140 records across 69 raw feature columns**.
+1. **Crawl** — walk the store's mobile-category listing, follow each product link, and parse the per-product specification table.
+2. **Prepare** — map the Persian specification names to English model columns, parse screen size to numeric inches, and one-hot encode the categorical specs.
+3. **Model** — fit a `LinearRegression` with a held-out test split, and optionally a `statsmodels` OLS for inference.
 
 ## What's inside
 
-| Path | Description |
-|------|-------------|
-| `crawler.py` | Scraper. Defines `get_data()`, which paginates the listing, follows product links, extracts name, price, and the full feature table per phone, and returns a `pandas.DataFrame`. |
-| `Mobile Crawling .ipynb` | End-to-end notebook: runs the crawler, cleans features, builds the modeling matrix, and fits the regression models. |
-| `LICENSE` | MIT license. |
-| `.gitignore` | Standard ignores. |
+```
+Crawling-Mobile-Shop/
+├── src/mobile_crawler/
+│   ├── config.py       # Base URL, page range, headers, timeouts, retries
+│   ├── parsing.py      # HTML -> records. Pure; testable against fixtures
+│   ├── crawler.py      # HTTP layer: listing walk, product fetch, retries
+│   ├── features.py     # Persian -> English mapping, design matrix
+│   ├── modeling.py     # Fit, evaluate, OLS summary
+│   └── cli.py          # crawl / train
+├── tests/              # 61 tests; no network, no live site
+├── notebooks/
+│   ├── Mobile Crawling .ipynb   # Original exploration notebook
+│   └── crawler_original.py      # Original script, preserved
+├── pyproject.toml
+└── requirements.txt
+```
 
-## Methods / Approach
+Parsing and feature preparation are separated from the network layer, so the part most likely to break — the store's markup — is the part covered by tests, using fixture HTML rather than live requests.
 
-**Scraping (`crawler.py`)**
-- Iterates listing pages and collects product URLs via the `product_img_link` anchors with BeautifulSoup.
-- For each product, parses the name, the displayed price (digits extracted and cast to `int`), and the key/value specification table (`feature_name` / `feature_value` spans).
-- Assembles all phones into a single DataFrame, with each distinct specification becoming a column.
-
-**Feature engineering (notebook)**
-- Cleans noisy fields with regex (e.g. extracting the numeric screen size from its raw string).
-- Selects a focused subset of specifications — Wi-Fi, screen size, pixel density, Bluetooth, chip, body material, SIM-card count, release year, resolution, GPU, CPU — and renames them to English.
-- Generates a `pandas-profiling` report for exploratory data analysis.
-- One-hot encodes the categorical specifications with `pd.get_dummies(drop_first=True)`, yielding the final model matrix.
-
-**Modeling (notebook)**
-- Splits the data into train/test sets (`test_size=0.2`, `random_state=101`) → 112 train / 28 test rows over 66 encoded features.
-- Fits a scikit-learn `LinearRegression`, then refits an OLS model with `statsmodels` to inspect coefficients, significance, and overall fit.
-
-## How to run
+## Installation
 
 ```bash
-# 1. Install dependencies
+git clone https://github.com/sheperd007/Crawling-Mobile-Shop.git
+cd Crawling-Mobile-Shop
 pip install -r requirements.txt
-
-# 2. Run the crawler programmatically
-python -c "from crawler import get_data; df = get_data(); print(df.shape); df.to_csv('mobiles.csv', index=False)"
+pip install -e .
 ```
 
-Or open the notebook to reproduce the full pipeline end to end:
+## Usage
+
+### Command line
 
 ```bash
-jupyter notebook "Mobile Crawling .ipynb"
+# Scrape to CSV (pages 1-7 by default)
+mobile-crawler crawl --output mobiles.csv --verbose
+
+# Fit the price model from the scraped CSV
+mobile-crawler train --input mobiles.csv
+
+# Add the statsmodels OLS summary
+mobile-crawler train --input mobiles.csv --ols
 ```
 
-> Note: the crawler depends on the live structure of the target site. If the site's markup or pagination changes, the CSS selectors in `crawler.py` may need updating.
+### Python
 
-## Results
+```python
+from mobile_crawler import CrawlConfig, crawl, select_features, build_design_matrix
+from mobile_crawler.modeling import fit_price_model
 
-The `statsmodels` OLS fit on the training data reports a high in-sample fit (**R² ≈ 0.96, Adjusted R² ≈ 0.95**). The model summary also flags a near-singular design matrix and strong multicollinearity — expected when many high-cardinality categorical specs are one-hot encoded on a small (140-row) sample. These figures should therefore be read as in-sample fit on this dataset rather than a validated out-of-sample accuracy claim; the project is best viewed as a scraping-plus-feature-engineering pipeline and a baseline modeling exploration.
+raw = crawl(CrawlConfig(last_page=3))
+features = select_features(raw)
+X, y = build_design_matrix(features)
+
+result = fit_price_model(X, y)
+print(result)                        # train/test R^2 and RMSE
+print(result.coefficients.head(10))  # ranked by magnitude
+```
+
+## Fixes applied during the refactor
+
+The original notebook and `crawler.py` are preserved in `notebooks/`. Porting them surfaced several defects, all fixed here:
+
+**Feature columns were mislabelled.** The notebook selected thirteen Persian columns in one order and then assigned English names in a *different* order:
+
+```python
+Data_machine = Data[['Price','Product','Wi-Fi','اندازه','تراکم پیکسلی','بلوتوث', ...]]
+Data_machine.columns = ["Price","Product","WIFI","bluetooth","Pixel_density","size", ...]
+```
+
+Position 4 is `اندازه` (**size**) but received the label `bluetooth`; position 6 is `بلوتوث` (**bluetooth**) but received `size`. Eight of thirteen columns were affected, including a CPU/GPU swap, so every regression coefficient was attributed to the wrong feature. `features.COLUMN_MAP` now maps by name, and tests pin each corrected pairing.
+
+**The crawler could not run on modern pandas.** It accumulated rows with `DataFrame.append`, removed in pandas 2.0. Rows are now collected in a list and passed to the constructor once — which also removes the quadratic reallocation of appending inside the loop.
+
+**A missing specification panel crashed the parser.** The feature dict was set to `None` in an `except` branch, then immediately assigned into (`result["Price"] = price`), raising `TypeError`. Parsing now always returns a dict.
+
+**Screen-size parsing raised on the first non-matching row.** `found` was assigned only inside the regex match, so a row without "اینچ" hit `UnboundLocalError`. `parse_screen_size` returns `None` instead.
+
+**Prices with Persian digits were silently corrupted.** The digit filter used `str.isdigit()`, which is `True` for `۰-۹`, producing a string `int()` could not parse. Digits are normalised to ASCII first.
+
+**Requests had no timeout and no retry**, so one stalled response hung the crawl and one transient error silently lost a product. Both are now configurable, with a polite delay between requests.
+
+**Name/value pairs could mismatch.** Feature names and values were collected into two separate lists and zipped, so a row missing one half shifted every subsequent pairing. Each row is now read as a unit and skipped if incomplete.
+
+## Development
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
+
+61 tests cover price and screen-size parsing (including Persian and Arabic-Indic digits), listing and product-page parsing against fixture HTML, the column mapping, design-matrix construction, config validation, and CLI parsing. None touch the network.
+
+The HTML parser tests require `beautifulsoup4`; without it they skip rather than fail (38 pass, 1 module skips). `crawler.py`'s HTTP paths are not automatically tested, since exercising them requires the live site.
+
+## Notes
+
+The crawler depends on the live structure of the target site. If its markup or pagination changes, the selectors in `parsing.py` need updating — the fixture-based tests will keep passing, since they pin the parser's contract rather than the site's current HTML.
 
 ## License
 
