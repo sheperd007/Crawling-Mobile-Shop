@@ -1,6 +1,32 @@
-assets/*
-!assets/.gitignore
-protected/runtime/*
-!protected/runtime/.gitignore
-protected/data/*.db
-themes/classic/views/
+# --- Python -------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# --- Testing / tooling --------------------------------------------------------
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+
+# --- Scraped data and model output --------------------------------------------
+# Crawl results are reproducible artefacts, not source.
+mobiles.csv
+*.pkl
+*.joblib
+
+# --- Notebooks ----------------------------------------------------------------
+.ipynb_checkpoints/
+
+# --- Editors / OS -------------------------------------------------------------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
