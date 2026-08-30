@@ -1,0 +1,17 @@
+# Scraping
+requests>=2.28
+beautifulsoup4>=4.11
+
+# Data handling
+pandas>=1.5
+numpy>=1.23
+
+# Modelling and analysis
+scikit-learn>=1.2
+statsmodels>=0.13
+seaborn>=0.12
+matplotlib>=3.6
+
+# Automated EDA used in the notebook. pandas-profiling was renamed upstream;
+# ydata-profiling is the maintained package and exposes the same API.
+ydata-profiling>=4.0

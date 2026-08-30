@@ -47,7 +47,7 @@ The raw crawl produces **140 records across 69 raw feature columns**.
 
 ```bash
 # 1. Install dependencies
-pip install requests beautifulsoup4 pandas numpy scikit-learn statsmodels seaborn pandas-profiling
+pip install -r requirements.txt
 
 # 2. Run the crawler programmatically
 python -c "from crawler import get_data; df = get_data(); print(df.shape); df.to_csv('mobiles.csv', index=False)"
