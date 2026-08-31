@@ -39,7 +39,7 @@ Parsing and feature preparation are separated from the network layer, so the par
 ## Installation
 
 ```bash
-git clone https://github.com/sheperd007/Crawling-Mobile-Shop.git
+git clone https://github.com/Hamid-Jahani/Crawling-Mobile-Shop.git
 cd Crawling-Mobile-Shop
 pip install -r requirements.txt
 pip install -e .

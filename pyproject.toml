@@ -34,8 +34,8 @@ notebook = ["seaborn>=0.12", "matplotlib>=3.6", "ydata-profiling>=4.0", "jupyter
 dev = ["pytest>=7.0", "pytest-cov>=4.0"]
 
 [project.urls]
-Homepage = "https://github.com/sheperd007/Crawling-Mobile-Shop"
-Repository = "https://github.com/sheperd007/Crawling-Mobile-Shop"
+Homepage = "https://github.com/Hamid-Jahani/Crawling-Mobile-Shop"
+Repository = "https://github.com/Hamid-Jahani/Crawling-Mobile-Shop"
 
 [project.scripts]
 mobile-crawler = "mobile_crawler.cli:main"
